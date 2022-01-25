@@ -7,9 +7,9 @@
 
 #define NUM ( 90 )
 #define TMAX ( 600.0 )
+//#define TMAX ( 1000 * dt )
 //#define dt ( 0.1 / ( NUM * NUM ) ) // 0.000001
-//#define dt ( 1.0 / ( NUM * NUM ) ) // 0.000001
-#define dt ( 1.0e-6 ) // 0.000001
+#define dt ( 1.0e-4 ) // 0.000001
 #define RANGE_CHECK(x, xmin, xmax) ( x = ( x < xmin ? xmin : ( x < xmax ?  x : xmax)));
 
 //----------定数(結晶)----------//
@@ -17,7 +17,7 @@
 #define C ( 2.0e+7 )
 #define rho ( 1.42e-3 )
 #define alpha ( 1.0e-5 )
-#define u_infty ( 0.04 )
+#define u_infty ( 0.004 )
 #define eps ( 0.01 )
 #define epsl ( 0.1 )
 //#define theta0 ( M_PI / 12.0 )
@@ -126,9 +126,9 @@ int main(void){
     measure(t,X1,X2,&L,&A);
     printf("t = %f A = %.15f\n", t, A);
     
-    if( z % 1000 == 0 ){
+    if( z % 100 == 0 ){
       
-      sprintf(file, "./data/barrett_mfs%06d.dat", z / 1000 );
+      sprintf(file, "./data/barrett_mfs%06d.dat", z / 100 );
       fp = fopen(file, "w");
 
       measure(t,X1,X2,&L,&A);
@@ -925,7 +925,7 @@ void grad_P( double t, double *x_mid1, double *x_mid2, double *n1, double *n2, d
   connect_double(x3, x4);
   */
   
-  /*
+  
   for( i = 1; i <= NUM; i++ ){
     
     ll[i] = DIST(x3[i - 1],x4[i - 1],x3[i],x4[i]);
@@ -940,7 +940,7 @@ void grad_P( double t, double *x_mid1, double *x_mid2, double *n1, double *n2, d
   connect(ll);
   connect_double(tt1,tt2);
   connect_double(nn1,nn2);  
-  */
+  
 
   for( i = 1; i <= NUM; i++ ){
     
@@ -968,7 +968,7 @@ void grad_P( double t, double *x_mid1, double *x_mid2, double *n1, double *n2, d
   
   for( i = 1; i <= NUM; i++ ){
 
-    d = 1.0 * DIST(x_mid1[i - 1],x_mid2[i - 1],x_mid1[i + 1],x_mid2[i + 1]) / 2.0;
+    d = DIST(x_mid1[i - 1],x_mid2[i - 1],x_mid1[i + 1],x_mid2[i + 1]) / 2.0;
     
     //y1[i] = x_mid1[i] - d * n1[i];
     //y2[i] = x_mid2[i] - d * n2[i];
@@ -979,16 +979,16 @@ void grad_P( double t, double *x_mid1, double *x_mid2, double *n1, double *n2, d
     //z1[i] = 0.0;
     //z2[i] = 0.0;
 
-    //printf("%f %f\n", y1[i], y2[i]);
+    //printf("%f %f %d\n", y1[i], y2[i], i);
     
   }
   
   for( i = NUM + 1; i <= 2 * NUM; i++ ){
 
-    d = 1.0 * DIST(x_mid3[i - 1 - NUM],x_mid4[i - 1 - NUM],x_mid3[i + 1 - NUM],x_mid4[i + 1 - NUM]) / 2.0;
+    d = DIST(x_mid3[i - 1 - NUM],x_mid4[i - 1 - NUM],x_mid3[i + 1 - NUM],x_mid4[i + 1 - NUM]) / 2.0;
 
     //y1[i] = x_mid3[i - NUM] + d * nn1[i - NUM];
-    //y2[i] = x_mid4[i - NUM] + d * nn2[i - NUM];
+    // y2[i] = x_mid4[i - NUM] + d * nn2[i - NUM];
     
     y1[i] = x_mid3[i - NUM] + d * amano3[i - NUM]; 
     y2[i] = x_mid4[i - NUM] + d * amano4[i - NUM];
@@ -1202,8 +1202,8 @@ void velocity( double t, double *x1, double *x2, double *n1, double *n2, double 
   PP(t,beta,kappa_gamma,P,A);
   grad_P(t,x_mid1,x_mid2,n1,n2,l,A,P,beta,grad_u1,grad_u2);
   normal_speed(t,x_mid1,x_mid2,n1,n2,phi,beta,kappa_gamma,grad_u1,grad_u2,v,V);
-  //tangent_speed(t,l,phi,kappa,v,V,L,W);
-  tangent_speed_kappa(t,l,l_mid,phi,kappa,kappa_mid,v,V,L,W);
+  tangent_speed(t,l,phi,kappa,v,V,L,W);
+  //tangent_speed_kappa(t,l,l_mid,phi,kappa,kappa_mid,v,V,L,W);
 
   free(x_mid1);
   free(x_mid2);
@@ -1347,10 +1347,10 @@ void tangent_speed_kappa( double t, double *l, double *l_mid, double *phi, doubl
   
   for( i = 1; i <= NUM; i++ ){
 
-    //psi[i] = phiphi(kappa[i]) * l[i] * ( ( f_kakko / phi_kakko ) - ( f[i] / phiphi(kappa[i]) ) + ( ( L * phi_kakko / ( NUM * l[i] * phiphi(kappa[i]) ) ) - 1 ) * omega(NUM) );
+    psi[i] = phiphi(kappa[i]) * l[i] * ( ( f_kakko / phi_kakko ) - ( f[i] / phiphi(kappa[i]) ) + ( ( L * phi_kakko / ( NUM * l[i] * phiphi(kappa[i]) ) ) - 1 ) * omega(NUM) );
     //psi[i] = phiphi(kappa[i]) * l[i] * ( ( f_kakko / phi_kakko ) - ( f[i] / phiphi(kappa[i]) ) + ( ( L * phi_kakko / ( NUM * l[i] * phiphi(kappa[i]) ) ) - 1 ) * ( 0.1 / dt ) );
 
-    psi[i] = phiphi(kappa[i]) * l[i] * ( ( f_kakko / phi_kakko ) - ( f[i] / phiphi(kappa[i]) ) + ( ( L * phi_kakko / ( NUM * l[i] * phiphi(kappa[i]) ) ) - 1 ) * ( 1.0 ) );
+    //psi[i] = phiphi(kappa[i]) * l[i] * ( ( f_kakko / phi_kakko ) - ( f[i] / phiphi(kappa[i]) ) + ( ( L * phi_kakko / ( NUM * l[i] * phiphi(kappa[i]) ) ) - 1 ) * ( 100 + 100 * V_kakko ) );
     
   }
 
